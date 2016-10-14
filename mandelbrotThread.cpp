@@ -3,6 +3,7 @@
 #include <time.h>
 #include <iostream>
 #include <cstdlib>
+#include <math.h>
 
 typedef struct {
     float x0, x1;
@@ -33,9 +34,10 @@ void* workerThreadStart(void* threadArgs) {
     WorkerArgs* args = static_cast<WorkerArgs*>(threadArgs);
 
     // TODO: Implement worker thread here.
+    float factor = float(args->height)/float(args->numThreads);
     mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->width, args->height,
-        args->threadId*(args->height/args->numThreads),
-        (args->height/args->numThreads),
+        args->threadId*ceil(factor),
+        ceil(factor),
         args->maxIterations, args->output);
 
     printf("Hello world from thread %d\n", args->threadId);
@@ -96,3 +98,9 @@ void mandelbrotThread(
     for (int i=0; i<numThreads; i++)
         pthread_join(workers[i], NULL);
 }
+
+
+
+
+
+//#pragma omp parallel for (#threads:)

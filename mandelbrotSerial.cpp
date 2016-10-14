@@ -78,6 +78,10 @@ void mandelbrotSerial(
     float dy = (y1 - y0) / height;
 
     int endRow = startRow + totalRows;
+    if (endRow>800)
+    {
+      endRow = 800;
+    }
 
     for (int j = startRow; j < endRow; j++) {
         for (int i = 0; i < width; ++i) {
