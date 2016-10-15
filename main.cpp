@@ -3,12 +3,21 @@
 #include <getopt.h>
 #include <time.h>
 #include <string.h>
+#include <omp.h>
+
 #include "CycleTimer.h"
 
 extern void mandelbrotSerial(
     float x0, float y0, float x1, float y1,
     int width, int height,
     int startRow, int numRows,
+    int maxIterations,
+    int output[]);
+
+extern void mandelbrotOpenmp(
+  int numThreads, float x0, float y0, float x1, float y1,
+    int width, int height,
+    int startRow, int totalRows,
     int maxIterations,
     int output[]);
 
@@ -70,7 +79,7 @@ int main(int argc, char** argv) {
     const unsigned int width = 1200;
     const unsigned int height = 800;
     const int maxIterations = 256;
-    int numThreads = 3;
+    int numThreads = 16;
 
     float x0 = -2;
     float x1 = 1;
@@ -120,6 +129,7 @@ int main(int argc, char** argv) {
 
     int* output_serial = new int[width*height];
     int* output_thread = new int[width*height];
+    int* output_openmp = new int[width*height];
 
     //
     // Run the serial implementation.  Run the code three times and
@@ -162,12 +172,40 @@ int main(int argc, char** argv) {
 
         return 1;
     }
-
     // compute speedup
     printf("\t\t\t\t(%.2fx speedup from %d threads)\n", minSerial/minThread, numThreads);
+
+    //
+    // Run the serial implementation.  Run the code three times and
+    // take the minimum to get a good estimate.
+    //
+
+    memset(output_openmp, 0, width * height * sizeof(int));
+    double minOpenmp = 1e30;
+    for (int i = 0; i < 3; ++i) {
+        double startTime = CycleTimer::currentSeconds();
+        mandelbrotOpenmp(numThreads, x0, y0, x1, y1, width, height, 0, height, maxIterations, output_openmp);
+        double endTime = CycleTimer::currentSeconds();
+        minOpenmp = std::min(minOpenmp, endTime - startTime);
+    }
+
+    printf("[mandelbrot openMP]:\t\t[%.3f] ms\n", minOpenmp * 1000);
+    writePPMImage(output_openmp, width, height, "mandelbrot-openmp.ppm", maxIterations);
+
+    if (! verifyResult (output_serial, output_openmp, width, height)) {
+        printf ("Error : Output from openmp does not match serial output\n");
+
+        delete[] output_serial;
+        delete[] output_openmp;
+
+        return 1;
+    }
+    // compute speedup
+    printf("\t\t\t\t(%.2fx speedup from %d threads)\n", minSerial/minOpenmp, numThreads);
 
    
     delete[] output_thread;
     delete[] output_serial;
+    delete[] output_openmp;
     return 0;
 }

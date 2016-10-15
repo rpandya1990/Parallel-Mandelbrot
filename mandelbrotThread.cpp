@@ -56,7 +56,7 @@ void mandelbrotThread(
     int width, int height,
     int maxIterations, int output[])
 {
-    const static int MAX_THREADS = 5;
+    const static int MAX_THREADS = 16;
 
     if (numThreads > MAX_THREADS)
     {

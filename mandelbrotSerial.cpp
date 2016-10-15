@@ -82,7 +82,6 @@ void mandelbrotSerial(
     {
       endRow = 800;
     }
-
     for (int j = startRow; j < endRow; j++) {
         for (int i = 0; i < width; ++i) {
             float x = x0 + i * dx;
